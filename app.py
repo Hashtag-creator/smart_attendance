@@ -3,12 +3,14 @@ import pyodbc
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
-
+from datetime import datetime
+import pytz
 
 app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin requests if needed
 load_dotenv()
 
+# Database connection
 def get_db_connection():
     try:
         conn = pyodbc.connect(
@@ -23,8 +25,6 @@ def get_db_connection():
     except Exception as e:
         print("❌ Database connection error:", e)
         raise
-
-
 
 @app.route('/')
 def home():
@@ -55,19 +55,27 @@ def mark_attendance():
         print("Error in /mark-attendance:", e)
         return jsonify({'status': 'Error occurred'}), 500
 
-
 @app.route('/attendance-records', methods=['GET'])
 def get_records():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT U.username, A.timestamp FROM Attendance A JOIN Users U ON A.user_id = U.id ORDER BY A.timestamp DESC")
-        records = [{'username': row[0], 'timestamp': row[1].isoformat()} for row in cursor.fetchall()]
+
+        ist = pytz.timezone('Asia/Kolkata')
+        records = []
+        for row in cursor.fetchall():
+            utc_time = row[1]
+            ist_time = utc_time.replace(tzinfo=pytz.utc).astimezone(ist)
+            records.append({
+                'username': row[0],
+                'timestamp': ist_time.strftime('%Y-%m-%d %H:%M:%S')
+            })
+
         return jsonify(records)
     except Exception as e:
         print("Error in /attendance-records:", e)
         return jsonify({'error': 'Failed to retrieve data'}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)
