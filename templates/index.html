@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Attendance System</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #005792;
+    }
+
+    input[type="text"] {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #005792;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #003f63;
+    }
+
+    #result {
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    li {
+      background: #e7f3fe;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .loading {
+      color: gray;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Smart Attendance System</h1>
+    <input type="text" id="username" placeholder="Enter the student name">
+    <button onclick="markAttendance()">Mark Attendance</button>
+    <p id="result"></p>
+
+    <h2>Attendance Records</h2>
+    <p class="loading" id="loading">Loading records...</p>
+    <ul id="records"></ul>
+  </div>
+
+  <script>
+    function markAttendance() {
+      const username = document.getElementById("username").value.trim();
+      const result = document.getElementById("result");
+
+      if (!username) {
+        result.textContent = "Username cannot be empty.";
+        result.style.color = "red";
+        return;
+      }
+
+      fetch('/mark-attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      })
+      .then(res => res.json())
+      .then(data => {
+        result.textContent = data.status;
+        result.style.color = "green";
+        fetchRecords();
+      })
+      .catch(() => {
+        result.textContent = "Failed to mark attendance. Try again.";
+        result.style.color = "red";
+      });
+    }
+
+    function fetchRecords() {
+      const list = document.getElementById("records");
+      const loading = document.getElementById("loading");
+
+      list.innerHTML = '';
+      loading.style.display = 'block';
+
+      fetch('/attendance-records')
+        .then(res => res.json())
+        .then(data => {
+          loading.style.display = 'none';
+          data.forEach(r => {
+            const li = document.createElement("li");
+            li.textContent = `${r.username} - ${new Date(r.timestamp).toLocaleString()}`;
+            list.appendChild(li);
+          });
+        })
+        .catch(() => {
+          loading.textContent = "Failed to load records.";
+        });
+    }
+
+    window.onload = fetchRecords;
+  </script>
+</body>
+</html>
