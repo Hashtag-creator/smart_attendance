@@ -6,7 +6,7 @@
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f6f8;
+      background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
       margin: 0;
       padding: 20px;
       color: #333;
@@ -15,46 +15,63 @@
     .container {
       max-width: 600px;
       margin: 50px auto;
-      background: #fff;
+      background: #ffffffdd;
       padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
     }
 
     h1, h2 {
       text-align: center;
-      color: #005792;
+      color: #004e92;
+      margin-bottom: 20px;
     }
 
     input[type="text"] {
-      width: calc(100% - 20px);
-      padding: 10px;
-      margin-top: 10px;
+      width: 100%;
+      padding: 12px;
       margin-bottom: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      border: 2px solid #6eb6ff;
+      border-radius: 10px;
       font-size: 16px;
+      outline: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    input[type="text"]:focus {
+      border-color: #004e92;
+      background-color: #f0f8ff;
     }
 
     button {
-      background-color: #005792;
+      background: linear-gradient(135deg, #004e92, #000428);
       color: white;
-      padding: 12px 20px;
+      padding: 14px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
       width: 100%;
+      margin-bottom: 10px;
+      transition: background 0.3s ease;
     }
 
     button:hover {
-      background-color: #003f63;
+      background: linear-gradient(135deg, #000428, #004e92);
     }
 
     #result {
       margin-top: 15px;
       font-weight: bold;
       text-align: center;
+      color: #006400;
+    }
+
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
     }
 
     ul {
@@ -63,28 +80,40 @@
     }
 
     li {
-      background: #e7f3fe;
-      margin: 8px 0;
-      padding: 10px;
-      border-radius: 6px;
+      background: #e3f2fd;
+      border-left: 5px solid #2196f3;
+      margin: 10px 0;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .loading {
-      color: gray;
-      font-style: italic;
+    li:hover {
+      background: #bbdefb;
+    }
+
+    #logSection {
+      display: none;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Smart Attendance System</h1>
-    <input type="text" id="username" placeholder="Enter the student name">
+    <input type="text" id="username" placeholder="Enter student name">
     <button onclick="markAttendance()">Mark Attendance</button>
     <p id="result"></p>
 
-    <h2>Attendance Records</h2>
-    <p class="loading" id="loading">Loading records...</p>
-    <ul id="records"></ul>
+    <button onclick="showLogs()">View Logs</button>
+    <button onclick="hideLogs()">Close Logs</button>
+
+    <div id="logSection">
+      <h2>Attendance Records</h2>
+      <p class="loading" id="loading">Loading records...</p>
+      <ul id="records"></ul>
+    </div>
   </div>
 
   <script>
@@ -94,7 +123,7 @@
 
       if (!username) {
         result.textContent = "Username cannot be empty.";
-        result.style.color = "red";
+        result.style.color = "crimson";
         return;
       }
 
@@ -106,12 +135,12 @@
       .then(res => res.json())
       .then(data => {
         result.textContent = data.status;
-        result.style.color = "green";
+        result.style.color = data.status === "Attendance marked" ? "#006400" : "crimson";
         fetchRecords();
       })
       .catch(() => {
         result.textContent = "Failed to mark attendance. Try again.";
-        result.style.color = "red";
+        result.style.color = "crimson";
       });
     }
 
@@ -128,7 +157,7 @@
           loading.style.display = 'none';
           data.forEach(r => {
             const li = document.createElement("li");
-            li.textContent = `${r.username} - ${new Date(r.timestamp).toLocaleString()}`;
+            li.textContent = `${r.username} — ${new Date(r.timestamp).toLocaleString()}`;
             list.appendChild(li);
           });
         })
@@ -137,7 +166,14 @@
         });
     }
 
-    window.onload = fetchRecords;
+    function showLogs() {
+      document.getElementById("logSection").style.display = "block";
+      fetchRecords();
+    }
+
+    function hideLogs() {
+      document.getElementById("logSection").style.display = "none";
+    }
   </script>
 </body>
 </html>
